@@ -1,0 +1,42 @@
+<font face="Verdana" size="2" color="7197BE" align="justify">
+<STRONG>Sybase Adaptive Server Enterprise SHA256-based password hashing algorithm</STRONG><BR>
+<BR>
+Authors: Laszlo Toth, Marcell Major<BR>
+<BR>
+Sybase ASE versions before version 15.0.2 used a proprietary hashing algorithm for storing database user passwords in the table syslogins. From version ASE 15.0.2, user passwords are stored in a new SHA256-based format. The old password hashes stored in the proprietary format can be used in newer versions if the "allow password downgrade" parameter is not set to zero. <BR>
+<BR>
+Sybase ASE System Administration Guide [1] contains a high level description of the new SHA256-based format. Using that description, the actually stored hashes cannot be reproduced, the information seems to be inaccurate. This article presents the algorithm in detail.<BR>
+<BR>
+Steps of the hash generation (the sample password "test12" is used):<BR>
+<BR>
+1. Convert the password to UTF-16 format (Big Endian):<BR>
+   "test12" -> "\x00t\x00e\x00s\x00t\x001\x002"<BR>
+2. Append zero bytes as padding, so that the length of the result is 510 bytes:<BR>
+   buffer = "\x00t\x00e\x00s\x00t\x001\x002\x00\x00\x00\x00\x00\x00\x00..."<BR>
+3. Append the 8-byte salt, thus the length of the result is 518 bytes:<BR>
+   buffer = "\x00t\x00e\x00s\x00t\x001\x002\x00\x00\x00\x00\x00\x00\x00...\x00\x4f\x9c\xc8\xc0\xd5\x5d\x98\x03"<BR>
+4. Generate the SHA256 hash of the data (518 bytes):<BR>
+   result = 0xb0c0816e127f2a56ee080230af5b4ce3da1f3d9fcc5449fcfcf3fb9595eb8ea6<BR>
+5. Store the salt and the hash in the format described below.<BR>
+<BR>
+Format of the data stored in syslogins table:<BR>
+The sample data: 0xc0074f9cc8c0d55d9803b0c0816e127f2a56ee080230af5b4ce3da1f3d9fcc5449fcfcf3fb9595eb8ea6<BR>
+Composed of the following:<BR>
+-2 constant bytes: 0xc007<BR>
+-8 bytes long salt: 4f9cc8c0d55d9803<BR>
+-32 bytes long hash: b0c0816e127f2a56ee080230af5b4ce3da1f3d9fcc5449fcfcf3fb9595eb8ea6<BR>
+<BR>
+<BR>
+[1] Adaptive Server&copy; Enterprise 15.0.2, System Administration Guide: Volume 1<BR>
+    <a href="http://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc31654.1502/html/sag1/BCFDGIFC.htm">http://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc31654.1502/html/sag1/BCFDGIFC.htm</a><BR>
+<BR>
+<BR>
+<STRONG>Sybase password cracker</STRONG><BR>
+<BR>
+You can download the proof of concept password cracker with source code for Sybase SHA256 based password hashes using the link bellow. This version is beta and not yet optimized for speed. The code is based on the woraauthbf Oracle password cracker developed by Laszlo Toth.
+<BR>
+<a href="sybcrack.zip" target="_blank">Sybcrack windows binary (requires Microsoft Visual C++ 9 runtime library)</a><BR>
+<a href="sybcrack_src.zip" target="_blank">Sybcrack source code</a><BR>
+<BR>
+
+</font>
